@@ -16,7 +16,6 @@ func main() {
 
 	// PUBLISHER
 	go rabbit.TradePublisher()
-	// go rabbit.SubscribeToTradeMessages("Trade.exchange.AAVEUSDT_PERP")
 
 	// DATASOURCE
 	broker.SSListener()

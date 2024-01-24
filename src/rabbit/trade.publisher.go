@@ -9,13 +9,10 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func getTradeExchange(symbol string) string {
-	return "Trade.exchange" + "." + symbol
-}
-
 func TradePublisher() {
 	log.Info("START TRADE PUBLISHER")
 	queueName := "Trade"
+	exchangeName := "TradeExchange"
 
 	conn, err := Connect()
 
@@ -44,20 +41,20 @@ func TradePublisher() {
 		log.Fatalf("Failed to declare a queue: %s", err)
 	}
 
-	for _, symbol := range context.Config.Symbols {
-		err = ch.ExchangeDeclare(
-			getTradeExchange(symbol), // name
-			"topic",                  // type
-			true,                     // durable
-			false,                    // auto-deleted
-			false,                    // internal
-			false,                    // no-wait
-			nil,                      // arguments
-		)
+	err = ch.ExchangeDeclare(
+		exchangeName, // name
+		"topic",      // type
+		true,         // durable
+		false,        // auto-deleted
+		false,        // internal
+		false,        // no-wait
+		nil,          // arguments
+	)
 
-		if err != nil {
-			log.Fatalf("Failed to declare an exchange: %s", err)
-		}
+	ch.QueueBind(queueName, q.Name+"."+"*", exchangeName, false, nil)
+
+	if err != nil {
+		log.Fatalf("Failed to declare an exchange: %s", err)
 	}
 
 	for {
@@ -68,11 +65,13 @@ func TradePublisher() {
 			log.Fatalf("Failed to serialize trade: %s", err)
 		}
 
+		routingKey := q.Name + "." + trade.Symbol
+
 		err = ch.Publish(
-			getTradeExchange(trade.Symbol), // exchange
-			q.Name,                         // routing key
-			false,                          // mandatory
-			false,                          // immediate
+			exchangeName, // exchange
+			routingKey,   // routing key
+			false,        // mandatory
+			false,        // immediate
 			amqp.Publishing{
 				ContentType: "application/json",
 				Body:        tradeBytes,
@@ -83,71 +82,4 @@ func TradePublisher() {
 		}
 
 	}
-}
-
-func SubscribeToTradeMessages(exchangeName string) {
-	log.Info("START TRADE SUBSCRIBE")
-	queueName := "Trade"
-
-	conn, err := Connect()
-
-	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %s", err)
-	}
-
-	ch, err := conn.Channel()
-
-	if err != nil {
-		log.Fatalf("Failed to open a channel: %s", err)
-	}
-
-	defer ch.Close()
-
-	// Объявление очереди
-	q, err := ch.QueueDeclare(
-		queueName, // имя очереди
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
-	if err != nil {
-		log.Fatalf("Failed to declare a queue: %s", err)
-	}
-
-	// Привязка очереди к exchange
-	err = ch.QueueBind(
-		q.Name,       // имя очереди
-		"#",          // routing key (подписка на все сообщения)
-		exchangeName, // имя exchange
-		false,
-		nil,
-	)
-	if err != nil {
-		log.Fatalf("Failed to bind a queue: %s", err)
-	}
-
-	msgs, err := ch.Consume(
-		q.Name, // очередь
-		"",     // потребитель
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // аргументы
-	)
-	if err != nil {
-		log.Fatalf("Failed to register a consumer: %s", err)
-	}
-
-	forever := make(chan bool)
-
-	go func() {
-		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
-		}
-	}()
-
-	<-forever
 }
