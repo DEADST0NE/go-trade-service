@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  ### GO APP #########################################
+  app:
+    container_name: go_app
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - ./go:/app
+    ports:
+      - "3000:3000"
+    privileged: true

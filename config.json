@@ -1,0 +1,30 @@
+{
+    "broker": {
+        "ss": {
+            "scheme": "wss",
+            "path": "api/3/ws/public",
+            "host": "api.app.exex.com"
+        }
+    },
+    "symbols": [
+        "BTCUSDT_PERP",
+        "ETHUSDT_PERP",
+        "ADAUSDT_PERP",
+        "EOSUSDT_PERP",
+        "SOLUSDT_PERP",
+        "BNBUSDT_PERP",
+        "LTCUSDT_PERP",
+        "MATICUSDT_PERP",
+        "AAVEUSDT_PERP",
+        "ZECUSDT_PERP",
+        "LINKUSDT_PERP",
+        "AVAXUSDT_PERP",
+        "DOTUSDT_PERP",
+        "XLMUSDT_PERP",
+        "TRXUSDT_PERP",
+        "BCHUSDT_PERP",
+        "MANAUSDT_PERP",
+        "UNIUSDT_PERP",
+        "XRPUSDT_PERP"
+    ]
+}
